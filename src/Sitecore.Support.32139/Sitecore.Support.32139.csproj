@@ -52,9 +52,16 @@
       <HintPath>..\packages\SC.Sitecore.ContentSearch.8.2.3\lib\Sitecore.ContentSearch.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Sitecore.ContentSearch.Linq, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SC.Sitecore.ContentSearch.Linq.8.2.3\lib\Sitecore.ContentSearch.Linq.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Sitecore.Kernel">
       <HintPath>..\packages\SC.Sitecore.Kernel.8.2.3\lib\Sitecore.Kernel.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="Sitecore.Reference.Storefront.Common">
+      <HintPath>..\..\lib\Sitecore.Reference.Storefront.Common.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />

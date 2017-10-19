@@ -6,10 +6,14 @@ using CommerceServer.Core.Catalog;
 using Sitecore.Commerce.Connect.CommerceServer;
 using Sitecore.Commerce.Connect.CommerceServer.Caching;
 using Sitecore.Commerce.Connect.CommerceServer.Catalog;
+using Sitecore.Commerce.Connect.CommerceServer.Search;
+using Sitecore.Commerce.Connect.CommerceServer.Search.Models;
 using Sitecore.ContentSearch;
 using Sitecore.ContentSearch.Diagnostics;
 using Sitecore.ContentSearch.Maintenance;
+using Sitecore.ContentSearch.Security;
 using Sitecore.Data;
+using Sitecore.Reference.Storefront;
 using LegacyCommerceServer = CommerceServer;
 
 namespace Sitecore.Support.Commerce.Connect.CommerceServer.Search
@@ -56,9 +60,10 @@ namespace Sitecore.Support.Commerce.Connect.CommerceServer.Search
             }
         }
 
-        private Guid GetParentCategoryId(string catalogName, string categoryName)
+        private List<Guid> GetAllParentIdsForModifiedCatalogItem(string catalogName, ExternalIdInformation catalogItemExternalIdInformation)
         {
             string language = null;
+            string categoryName = catalogItemExternalIdInformation.CategoryName;
             var contextManager = Sitecore.Commerce.Connect.CommerceServer.CommerceTypeLoader.CreateInstance<Sitecore.Commerce.Connect.CommerceServer.ICommerceServerContextManager>();
             var categoryConfiguration = new LegacyCommerceServer.Core.Catalog.CategoryConfiguration()
             {
@@ -72,18 +77,51 @@ namespace Sitecore.Support.Commerce.Connect.CommerceServer.Search
                 LoadFromCache = false
             };
             var category = contextManager.CatalogContext.GetCategory(catalogName, categoryName, language, categoryConfiguration);
-            return category.AncestorCategories.ToList()[0].ExternalId;
+            if (category != null && category.AncestorCategories != null && category.AncestorCategories.Count > 0)
+                return category.AncestorCategories.Select(x => x.ExternalId).ToList();
+            else
+                return SearchAllParentIdsForCatalogItem(catalogItemExternalIdInformation);
         }
 
-        private List<Guid> GetParentCategoryIds(string catalogName, List<ExternalIdInformation> catalogItemExternalIdInformation)
+        private List<Guid> GetAllParentIdsForAllModifiedCatalogItems(string catalogName, List<ExternalIdInformation> catalogItemExternalIdInformation)
         {
             List<Guid> uniqueIds = new List<Guid>();
             foreach (var info in catalogItemExternalIdInformation)
             {
-                var parentCategoryId = this.GetParentCategoryId(catalogName, info.CategoryName);
-                uniqueIds.Add(parentCategoryId);
+                var parentCategoryId = this.GetAllParentIdsForModifiedCatalogItem(catalogName, info);
+                uniqueIds.AddRange(parentCategoryId);
             }
             return uniqueIds;
+        }
+
+        private List<Guid> SearchAllParentIdsForCatalogItem(ExternalIdInformation catalogItemExternalIdInformation)
+        {
+            Guid catalogItemId = catalogItemExternalIdInformation.ExternalId;
+            List<Guid> parentItemIds = new List<Guid>();
+
+            using (
+                IProviderSearchContext providerSearchContext =
+                    this.Index.CreateSearchContext(SearchSecurityOptions.DisableSecurityCheck))
+            {
+                var strCatalogItemId = catalogItemId.ToString();
+                parentItemIds = providerSearchContext.GetQueryable<CommerceBaseCatalogSearchResultItem>()
+                    .Where(it => it[StorefrontConstants.KnownIndexFields.ChildCategoriesSequence] == strCatalogItemId)
+                    .Select(it => it.ItemId).AsEnumerable().Distinct().Select(it => it.Guid).ToList();
+            }
+
+            return parentItemIds;
+        }
+
+        private List<Guid> SearchAllParentIdsForAllCatalogItems(List<ExternalIdInformation> catalogItemExternalIdInformation)
+        {
+            List<Guid> parentItemIds = new List<Guid>();
+            
+            foreach (var info in catalogItemExternalIdInformation)
+            {
+                parentItemIds.AddRange(SearchAllParentIdsForCatalogItem(info));
+            }
+
+            return parentItemIds;
         }
 
         public SelectedCatalogsIntervalAsynchronousStrategy(string database, string rootPath, string interval = null) : base(database, rootPath, interval)
@@ -97,8 +135,8 @@ namespace Sitecore.Support.Commerce.Connect.CommerceServer.Search
             List<ExternalIdInformation> deletedCatalogItemExternalIdInformation = this.CatalogRepository.GetDeletedCatalogItemExternalIdInformation(catalogName, this.GetMinCatalogItemLastModifiedDate()) ?? new List<ExternalIdInformation>();
             List<ExternalIdInformation> modifiedCatalogItemExternalIdInformation =
                 this.CatalogRepository.GetModifiedCatalogItemExternalIdInformation(this.GetMinCatalogItemLastModifiedDate(), catalogName, this.GetItemTypesToIndex());
-            indexableUniqueIds = this.GetParentCategoryIds(catalogName, deletedCatalogItemExternalIdInformation);
-            indexableUniqueIds.AddRange(this.GetParentCategoryIds(catalogName, modifiedCatalogItemExternalIdInformation));
+            indexableUniqueIds = this.SearchAllParentIdsForAllCatalogItems(deletedCatalogItemExternalIdInformation);
+            indexableUniqueIds.AddRange(this.GetAllParentIdsForAllModifiedCatalogItems(catalogName, modifiedCatalogItemExternalIdInformation));
             this.LogMessage("Updating {0} parent catalog items.", new object[]
             {
                 indexableUniqueIds.Count
