@@ -6,20 +6,20 @@ using CommerceServer.Core.Catalog;
 using Sitecore.Commerce.Connect.CommerceServer;
 using Sitecore.Commerce.Connect.CommerceServer.Caching;
 using Sitecore.Commerce.Connect.CommerceServer.Catalog;
-using Sitecore.Commerce.Connect.CommerceServer.Search;
 using Sitecore.Commerce.Connect.CommerceServer.Search.Models;
 using Sitecore.ContentSearch;
 using Sitecore.ContentSearch.Diagnostics;
 using Sitecore.ContentSearch.Maintenance;
 using Sitecore.ContentSearch.Security;
 using Sitecore.Data;
-using Sitecore.Reference.Storefront;
 using LegacyCommerceServer = CommerceServer;
 
 namespace Sitecore.Support.Commerce.Connect.CommerceServer.Search
 {
     public class SelectedCatalogsIntervalAsynchronousStrategy: Sitecore.Commerce.Connect.CommerceServer.Search.SelectedCatalogsIntervalAsynchronousStrategy
     {
+        private const string ChildCategoriesSequence = "childcategoriessequence";
+
         private void LogMessage(string format, params object[] args)
         {
             string str = string.Format(CultureInfo.InvariantCulture, "[Index={0}] {1} : ", new object[]
@@ -105,7 +105,7 @@ namespace Sitecore.Support.Commerce.Connect.CommerceServer.Search
             {
                 var strCatalogItemId = catalogItemId.ToString();
                 parentItemIds = providerSearchContext.GetQueryable<CommerceBaseCatalogSearchResultItem>()
-                    .Where(it => it[StorefrontConstants.KnownIndexFields.ChildCategoriesSequence] == strCatalogItemId)
+                    .Where(it => it[ChildCategoriesSequence] == strCatalogItemId)
                     .Select(it => it.ItemId).AsEnumerable().Distinct().Select(it => it.Guid).ToList();
             }
 
