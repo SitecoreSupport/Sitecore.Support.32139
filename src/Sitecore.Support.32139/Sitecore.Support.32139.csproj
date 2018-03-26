@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SelectedCatalogsCrawler.cs" />
     <Compile Include="SelectedCatalogsIntervalAsynchronousStrategy.cs" />
   </ItemGroup>
   <ItemGroup>
