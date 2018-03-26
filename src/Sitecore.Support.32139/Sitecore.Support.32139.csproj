@@ -44,9 +44,11 @@
     <Reference Include="CommerceServer.Core.Catalog, Version=10.0.0.0, Culture=neutral, PublicKeyToken=f5c79cb11734af7a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\CommerceServer.Core.Catalog.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="Sitecore.Commerce.Connect.CommerceServer">
-      <HintPath>..\..\lib\Sitecore.Commerce.Connect.CommerceServer.dll</HintPath>
+    <Reference Include="Sitecore.Commerce.Connect.CommerceServer, Version=8.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\COM.Sitecore.Commerce.Connect.CommerceServer.8.2.1\lib\Sitecore.Commerce.Connect.CommerceServer.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Sitecore.ContentSearch, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SC.Sitecore.ContentSearch.8.2.3\lib\Sitecore.ContentSearch.dll</HintPath>
@@ -72,7 +74,9 @@
     <Compile Include="SelectedCatalogsIntervalAsynchronousStrategy.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Config\Include\zzz\Sitecore.Support.32139.config" />
+    <Content Include="App_Config\Include\zzz\Sitecore.Support.32139.config">
+      <SubType>Designer</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
