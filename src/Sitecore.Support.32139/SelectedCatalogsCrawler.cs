@@ -2,6 +2,7 @@
 using Sitecore.Commerce.Connect.CommerceServer.Search.Models;
 using Sitecore.ContentSearch;
 using Sitecore.Data;
+using Sitecore.Data.Items;
 using Sitecore.SecurityModel;
 
 namespace Sitecore.Support.Commerce.Connect.CommerceServer.Search
@@ -15,7 +16,15 @@ namespace Sitecore.Support.Commerce.Connect.CommerceServer.Search
                 ItemUri itemUri = indexableUniqueId as SitecoreItemUniqueId;
                 if (itemUri != null)
                 {
-                    return new CommerceIndexableItem(Sitecore.Data.Database.GetItem(itemUri));
+                    Item item = Sitecore.Data.Database.GetItem(itemUri);
+                    if (item != null)
+                    {
+                        return new CommerceIndexableItem(item);
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
                 else
                 {
